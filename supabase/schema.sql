@@ -224,6 +224,32 @@ create policy "listing_images_write_authenticated"
   with check (bucket_id in ('listing-images', 'egg-images'));
 
 -- -------------------------------------------------------------
--- 7. Rydd bort gammel availability-tabell (etter migrering)
+-- 7. Realtime – live oppdatering av beholdning
+--    Legger tabellene i supabase_realtime-publikasjonen slik at
+--    åpne sider oppdateres i sanntid.
+-- -------------------------------------------------------------
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public' and tablename = 'listings'
+    ) then
+      alter publication supabase_realtime add table public.listings;
+    end if;
+
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public' and tablename = 'reservations'
+    ) then
+      alter publication supabase_realtime add table public.reservations;
+    end if;
+  end if;
+end $$;
+
+-- -------------------------------------------------------------
+-- 8. Rydd bort gammel availability-tabell (etter migrering)
 -- -------------------------------------------------------------
 drop table if exists public.availability cascade;

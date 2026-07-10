@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Listing } from "@/lib/types";
+import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen w-full">
+      <RealtimeRefresh table="listings" />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-amber-50 via-[#fffdf7] to-[#fffdf7]" />

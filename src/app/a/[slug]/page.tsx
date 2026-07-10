@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Listing } from "@/lib/types";
 import ReservationForm from "@/components/ReservationForm";
+import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function ListingPage({
 
   return (
     <main className="min-h-screen w-full">
+      <RealtimeRefresh table="listings" filter={`id=eq.${listing.id}`} />
       <div className="mx-auto max-w-2xl px-6 pt-8">
         <Link
           href="/"

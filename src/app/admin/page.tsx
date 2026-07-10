@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Listing, Reservation } from "@/lib/types";
 import AdminHome from "./AdminHome";
+import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,13 @@ export default async function AdminPage() {
     .returns<Reservation[]>();
 
   return (
-    <AdminHome
-      listings={listings ?? []}
-      reservations={reservations ?? []}
-    />
+    <>
+      <RealtimeRefresh table="listings" />
+      <RealtimeRefresh table="reservations" />
+      <AdminHome
+        listings={listings ?? []}
+        reservations={reservations ?? []}
+      />
+    </>
   );
 }

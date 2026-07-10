@@ -85,13 +85,35 @@ nødvendig.
 - Reservasjonslisten er kun synlig for innlogget admin (håndhevet av RLS).
 - Personopplysninger logges aldri.
 
-## 7. Betaling (senere)
+## 7. Sanntid og concurrency
+
+Dette er to forskjellige ting, dekket av hver sin mekanisme:
+
+**Sanntid (Realtime) – live UI:**
+Åpne sider abonnerer på endringer i `listings` (og `reservations` i admin) via
+Supabase Realtime og oppdaterer beholdningen live, uten at noen trenger å laste
+siden på nytt. Ingen ekstra pakke – det ligger i `@supabase/supabase-js`.
+Realtime skrus på for tabellene i `supabase/schema.sql` (de legges i
+`supabase_realtime`-publikasjonen).
+
+**Concurrency – ingen oversalg:**
+All reservasjon går gjennom databasefunksjonen `make_reservation()`, som i én
+atomisk transaksjon låser annonse-raden (`SELECT … FOR UPDATE`), sjekker lageret
+og teller ned. Kommer to bestillinger samtidig, blir den andre validert mot det
+oppdaterte tallet og avvist hvis det ikke er nok igjen. Du kan derfor aldri
+selge mer enn du har – dette håndheves i databasen, ikke i nettleseren.
+
+> Merk: dette hindrer oversalg av lageret, men ikke at samme person sender
+> skjemaet to ganger. En egen «hindre dobbel innsending»-sperre kan legges til
+> ved behov.
+
+## 8. Betaling (senere)
 
 Databasen har allerede et `price`-felt per annonse, klart for online betaling.
 Anbefalt neste steg er **Vipps** (vanlig i Norge). Det bygges når du er klar –
 krever en Vipps-avtale og en tredjepartspakke.
 
-## 8. Prosjektstruktur
+## 9. Prosjektstruktur
 
 ```
 src/
@@ -110,6 +132,7 @@ src/
   components/
     ReservationForm.tsx            # Dynamisk reservasjonsskjema
     QrCode.tsx                     # QR-generering + nedlasting
+    RealtimeRefresh.tsx            # Live oppdatering via Supabase Realtime
   lib/
     types.ts
     slug.ts
