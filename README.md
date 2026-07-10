@@ -1,9 +1,9 @@
-# 🥚 Egg Shop
+# 🌾 Gårdsbutikk
 
-En liten, moderne nettside for å selge gårdsegg. Én offentlig side som viser
-hvor mange egg som er til salgs i dag, med reservasjonsskjema, og en beskyttet
-admin-side der du styrer antall, bilde, melding, ser reservasjoner og laster ned
-en QR-kode til postkassen.
+En liten, moderne nettside for å selge varer fra gården – egg i dag, kaniner
+neste år, og hva du enn vil senere. Du oppretter **annonser** selv fra admin
+(bilde, kort tekst, lager og reservering), og hver annonse får sin egen side og
+QR-kode.
 
 Bygget med **Next.js (App Router)**, **Tailwind CSS** og **Supabase**
 (database + innlogging + bildelagring). Klar for **Vercel**.
@@ -12,103 +12,109 @@ Bygget med **Next.js (App Router)**, **Tailwind CSS** og **Supabase**
 
 ## 1. Forutsetninger
 
-- Node.js 18.18+ (du har v24 ✔)
+- Node.js 18.18+
 - En gratis konto på [supabase.com](https://supabase.com)
-- En [Vercel](https://vercel.com)-konto (du har allerede)
+- En [Vercel](https://vercel.com)-konto
 
 ## 2. Sett opp Supabase
 
 1. Opprett et nytt prosjekt på Supabase.
 2. Gå til **SQL Editor**, lim inn hele innholdet i
    [`supabase/schema.sql`](./supabase/schema.sql) og kjør det.
-   Dette lager tabellene, sikkerhetsregler (RLS), reservasjons-funksjonen og
-   bilde-bøtta.
+   Dette lager annonse-tabellen, reservasjoner, sikkerhetsregler (RLS),
+   reservasjons-funksjonen og bilde-bøtta.
+   - Kjørte du en tidligere versjon (egg-modellen)? Bare kjør filen på nytt –
+     den **migrerer automatisk** den gamle egg-oppføringen til en annonse og
+     rydder bort det gamle.
 3. Opprett din admin-bruker: **Authentication → Users → Add user** →
-   skriv inn e-post og passord (huk av «Auto Confirm User»).
-   Dette er brukeren du logger inn med på `/admin`.
-4. Gå til **Project Settings → API** og kopier:
-   - `Project URL`
-   - `anon` `public`-nøkkelen
+   e-post + passord (huk av «Auto Confirm User»).
+4. Gå til **Project Settings → API** og kopier `Project URL` og
+   `anon`/`publishable`-nøkkelen.
 
-> Tips: For litt ekstra sikkerhet kan du skru av selvregistrering under
+> Tips: Skru gjerne av selvregistrering under
 > **Authentication → Providers → Email → «Enable sign ups»** (av), slik at kun
 > brukere du selv oppretter kan logge inn.
 
 ## 3. Kjør lokalt
 
 ```bash
-# 1. Installer avhengigheter
 npm install
-
-# 2. Lag miljøfil og fyll inn Supabase-verdiene
-cp .env.local.example .env.local
-#   -> rediger .env.local
-
-# 3. Start utviklingsserveren
+cp .env.local.example .env.local   # fyll inn Supabase-verdiene
 npm run dev
 ```
 
-Åpne <http://localhost:3000> for den offentlige siden, og
-<http://localhost:3000/admin> for admin (du blir sendt til innlogging).
+- Forsiden: <http://localhost:3000>
+- Admin: <http://localhost:3000/admin>
 
 ## 4. Slik bruker du den
 
 **Admin (`/admin`):**
-- Sett **antall egg tilgjengelig i dag** (f.eks. 24).
-- Last opp et **bilde** og skriv en **kort melding**.
-- Trykk **Lagre**.
-- Se **reservasjoner** (navn, telefon, antall, melding, tidspunkt).
-- Last ned **QR-koden**, skriv den ut og heng på postkassen.
+- **+ Ny annonse** → fyll inn tittel, tekst, bilde, lager og velg
+  **reservasjonstype**:
+  - **Faste valg** – kunden velger f.eks. 6 / 12 / 24 (egg)
+  - **Fritt antall** – kunden skriver inn ønsket antall
+  - **Én enhet** – reserver 1 om gangen (f.eks. ett dyr)
+- **Publiser / Skjul** annonser, endre rekkefølge, rediger eller slett.
+- Se alle **reservasjoner** (navn, telefon, antall, melding, tid) med hvilken
+  annonse de gjelder.
+- Last ned **QR-kode** – én til forsiden (admin-forsiden) og én per annonse
+  (inne på hver annonse). Skriv ut og heng opp.
 
-**Kunde (forsiden `/`):**
-- Ser hvor mange egg som er tilgjengelig, bilde og melding.
-- Velger 6, 12 eller 24 egg (kun de som får plass i lageret), fyller inn navn +
-  telefon, og reserverer.
-- Lageret telles ned automatisk. Når det er tomt vises «Utsolgt».
+**Kunde:**
+- Forsiden viser alle tilgjengelige annonser som kort.
+- Klikk en annonse → se detaljer og reserver. Lageret telles ned automatisk;
+  når det er tomt vises «Utsolgt».
 
 ## 5. Deploy til Vercel
 
 1. Push koden til et GitHub-repo.
-2. På Vercel: **Add New… → Project → Import** repoet.
-3. Under **Environment Variables**, legg inn de samme to variablene fra
-   `.env.local`:
+2. Vercel: **Add New… → Project → Import** repoet (oppdager Next.js automatisk).
+3. Legg inn **Environment Variables**:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Trykk **Deploy**.
-5. Etter deploy får du en URL (f.eks. `https://egg-shop.vercel.app`).
-   QR-koden på admin-siden peker automatisk til denne adressen – last den ned
-   på nytt fra produksjons-URLen før du skriver den ut.
+4. **Deploy**. Etter deploy peker QR-kodene automatisk til produksjons-URLen –
+   last dem ned på nytt derfra før du skriver dem ut.
+
+Videre `git push` til `main` deployer automatisk på nytt. Ingen GitHub Actions
+nødvendig.
 
 ## 6. Personvern (kort)
 
-- Vi lagrer kun **navn** og **telefon** fra kunden – det som trengs for at du
-  skal kunne legge eggene klar. Ingen andre personopplysninger.
-- Reservasjonslisten er kun synlig for innlogget admin (håndhevet av RLS i
-  databasen).
+- Vi lagrer kun **navn** og **telefon** fra kunden – det som trengs for å legge
+  varen klar. Ingen andre personopplysninger.
+- Reservasjonslisten er kun synlig for innlogget admin (håndhevet av RLS).
 - Personopplysninger logges aldri.
 
-## 7. Prosjektstruktur
+## 7. Betaling (senere)
+
+Databasen har allerede et `price`-felt per annonse, klart for online betaling.
+Anbefalt neste steg er **Vipps** (vanlig i Norge). Det bygges når du er klar –
+krever en Vipps-avtale og en tredjepartspakke.
+
+## 8. Prosjektstruktur
 
 ```
 src/
   app/
-    page.tsx                 # Offentlig forside
+    page.tsx                       # Forside: oversikt over annonser
     layout.tsx
     globals.css
+    a/[slug]/page.tsx              # Offentlig detaljeside per annonse
     admin/
-      page.tsx               # Admin (server, beskyttet)
-      AdminDashboard.tsx     # Admin-UI (klient)
-      login/page.tsx         # Innlogging
+      page.tsx                     # Admin (server, beskyttet)
+      AdminHome.tsx                # Admin-oversikt (klient)
+      login/page.tsx               # Innlogging
+      annonser/[id]/
+        page.tsx                   # Editor (server; id="ny" = opprett)
+        ListingEditor.tsx          # Editor-skjema (klient)
   components/
-    ReservationForm.tsx      # Reservasjonsskjema
-    QrCode.tsx               # QR-generering + nedlasting
+    ReservationForm.tsx            # Dynamisk reservasjonsskjema
+    QrCode.tsx                     # QR-generering + nedlasting
   lib/
     types.ts
-    supabase/
-      client.ts              # Nettleser-klient
-      server.ts              # Server-klient
-      middleware.ts          # Sesjon + beskyttelse av /admin
-  middleware.ts
+    slug.ts
+    supabase/{client,server,middleware}.ts
+  middleware.ts                    # Sesjon + beskyttelse av /admin
 supabase/
-  schema.sql                 # Kjør i Supabase SQL Editor
+  schema.sql                       # Kjør i Supabase SQL Editor
 ```

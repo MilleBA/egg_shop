@@ -3,37 +3,50 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { QUANTITIES } from "@/lib/types";
+import type { ReservationType } from "@/lib/types";
 
 const ERROR_TEXT: Record<string, string> = {
-  not_enough: "Beklager, det er ikke nok egg igjen til dette antallet.",
+  not_enough: "Beklager, det er ikke nok igjen til dette antallet.",
   invalid_quantity: "Ugyldig antall.",
   missing_fields: "Fyll inn navn og telefonnummer.",
+  not_found: "Denne annonsen er ikke tilgjengelig lenger.",
   network: "Noe gikk galt. Prøv igjen om litt.",
 };
 
 export default function ReservationForm({
-  maxAvailable,
+  listingId,
+  reservationType,
+  quantityOptions,
+  availableCount,
 }: {
-  maxAvailable: number;
+  listingId: string;
+  reservationType: ReservationType;
+  quantityOptions: number[];
+  availableCount: number;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [quantity, setQuantity] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Kun antall som får plass i lageret
-  const options = QUANTITIES.filter((q) => q <= maxAvailable);
+  // Startverdi for antall avhengig av type
+  const fixedOptions = quantityOptions.filter((q) => q <= availableCount);
+  const [quantity, setQuantity] = useState<number>(
+    reservationType === "single" ? 1 : reservationType === "free" ? 1 : 0
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (!quantity) {
-      setError("Velg hvor mange egg du vil reservere.");
+    if (reservationType === "fixed" && !quantity) {
+      setError("Velg hvor mange du vil reservere.");
+      return;
+    }
+    if (reservationType === "free" && (quantity < 1 || quantity > availableCount)) {
+      setError(`Velg et antall mellom 1 og ${availableCount}.`);
       return;
     }
 
@@ -41,9 +54,10 @@ export default function ReservationForm({
     const supabase = createClient();
 
     const { data, error: rpcError } = await supabase.rpc("make_reservation", {
+      p_listing_id: listingId,
       p_name: name.trim(),
       p_phone: phone.trim(),
-      p_quantity: quantity,
+      p_quantity: reservationType === "single" ? 1 : quantity,
       p_note: note.trim() || null,
     });
 
@@ -57,7 +71,6 @@ export default function ReservationForm({
     if (!result?.ok) {
       setStatus("idle");
       setError(ERROR_TEXT[result?.error ?? "network"] ?? ERROR_TEXT.network);
-      // Oppdater antallet på siden (kan ha endret seg)
       router.refresh();
       return;
     }
@@ -74,8 +87,8 @@ export default function ReservationForm({
           Reservasjonen er mottatt!
         </h2>
         <p className="mt-2 text-emerald-700">
-          Takk, {name.split(" ")[0] || "og velkommen"}. Jeg legger eggene klar
-          til deg.
+          Takk, {name.split(" ")[0] || "og velkommen"}. Vi legger det klar til
+          deg.
         </p>
       </div>
     );
@@ -86,43 +99,68 @@ export default function ReservationForm({
       onSubmit={handleSubmit}
       className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8"
     >
-      <h2 className="text-xl font-bold text-stone-800">Reserver egg</h2>
+      <h2 className="text-xl font-bold text-stone-800">Reserver</h2>
       <p className="mt-1 text-sm text-stone-500">
-        Fyll inn skjemaet, så holder jeg av eggene til deg.
+        Fyll inn skjemaet, så holder vi av til deg.
       </p>
 
       {/* Antall */}
-      <fieldset className="mt-6">
-        <legend className="text-sm font-medium text-stone-700">
-          Hvor mange?
-        </legend>
-        <div className="mt-2 grid grid-cols-3 gap-3">
-          {options.map((q) => (
-            <button
-              type="button"
-              key={q}
-              onClick={() => setQuantity(q)}
-              className={`rounded-2xl border px-4 py-4 text-center transition ${
-                quantity === q
-                  ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500"
-                  : "border-stone-200 hover:border-amber-300"
-              }`}
-            >
-              <span className="block text-2xl font-bold text-stone-800">
-                {q}
-              </span>
-              <span className="text-xs text-stone-400">egg</span>
-            </button>
-          ))}
+      {reservationType === "fixed" && (
+        <fieldset className="mt-6">
+          <legend className="text-sm font-medium text-stone-700">
+            Hvor mange?
+          </legend>
+          <div className="mt-2 grid grid-cols-3 gap-3">
+            {fixedOptions.map((q) => (
+              <button
+                type="button"
+                key={q}
+                onClick={() => setQuantity(q)}
+                className={`rounded-2xl border px-4 py-4 text-center transition ${
+                  quantity === q
+                    ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500"
+                    : "border-stone-200 hover:border-amber-300"
+                }`}
+              >
+                <span className="block text-2xl font-bold text-stone-800">
+                  {q}
+                </span>
+                <span className="text-xs text-stone-400">stk</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
+      {reservationType === "free" && (
+        <div className="mt-6">
+          <label
+            htmlFor="quantity"
+            className="text-sm font-medium text-stone-700"
+          >
+            Hvor mange? (maks {availableCount})
+          </label>
+          <input
+            id="quantity"
+            type="number"
+            min={1}
+            max={availableCount}
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 text-lg outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          />
         </div>
-      </fieldset>
+      )}
+
+      {reservationType === "single" && (
+        <p className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-stone-600">
+          Du reserverer <strong>1 stk</strong>.
+        </p>
+      )}
 
       {/* Navn */}
       <div className="mt-5">
-        <label
-          htmlFor="name"
-          className="text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="name" className="text-sm font-medium text-stone-700">
           Navn
         </label>
         <input
@@ -138,10 +176,7 @@ export default function ReservationForm({
 
       {/* Telefon */}
       <div className="mt-4">
-        <label
-          htmlFor="phone"
-          className="text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="phone" className="text-sm font-medium text-stone-700">
           Telefon
         </label>
         <input
@@ -157,10 +192,7 @@ export default function ReservationForm({
 
       {/* Melding */}
       <div className="mt-4">
-        <label
-          htmlFor="note"
-          className="text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="note" className="text-sm font-medium text-stone-700">
           Melding <span className="text-stone-400">(valgfritt)</span>
         </label>
         <textarea

@@ -1,13 +1,25 @@
-export type Availability = {
+export type ReservationType = "fixed" | "free" | "single";
+
+export type Listing = {
   id: string;
-  available_count: number;
+  slug: string;
+  title: string;
+  description: string | null;
   image_url: string | null;
-  note: string | null;
+  category: string | null;
+  reservation_type: ReservationType;
+  quantity_options: number[];
+  available_count: number;
+  price: number | null;
+  is_published: boolean;
+  sort_order: number;
+  created_at: string;
   updated_at: string;
 };
 
 export type Reservation = {
   id: string;
+  listing_id: string | null;
   name: string;
   phone: string;
   quantity: number;
@@ -15,6 +27,8 @@ export type Reservation = {
   created_at: string;
 };
 
-// Tillatte antall egg per reservasjon
-export const QUANTITIES = [6, 12, 24] as const;
-export type Quantity = (typeof QUANTITIES)[number];
+export const RESERVATION_TYPE_LABELS: Record<ReservationType, string> = {
+  fixed: "Faste valg (f.eks. 6/12/24)",
+  free: "Fritt antall",
+  single: "Én enhet per reservasjon",
+};

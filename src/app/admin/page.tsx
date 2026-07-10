@@ -1,18 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Availability, Reservation } from "@/lib/types";
-import AdminDashboard from "./AdminDashboard";
+import type { Listing, Reservation } from "@/lib/types";
+import AdminHome from "./AdminHome";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const supabase = await createClient();
 
-  const { data: availability } = await supabase
-    .from("availability")
+  const { data: listings } = await supabase
+    .from("listings")
     .select("*")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle<Availability>();
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true })
+    .returns<Listing[]>();
 
   const { data: reservations } = await supabase
     .from("reservations")
@@ -21,8 +21,8 @@ export default async function AdminPage() {
     .returns<Reservation[]>();
 
   return (
-    <AdminDashboard
-      availability={availability ?? null}
+    <AdminHome
+      listings={listings ?? []}
       reservations={reservations ?? []}
     />
   );

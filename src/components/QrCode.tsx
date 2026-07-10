@@ -3,22 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 
-// Genererer en QR-kode som peker til den offentlige siden,
+// Genererer en QR-kode som peker til en side (standard: forsiden),
 // og lar deg laste den ned som PNG for utskrift.
-export default function QrCode() {
+export default function QrCode({
+  path = "",
+  filename = "qr.png",
+  caption = "Skriv ut og heng opp.",
+}: {
+  path?: string;
+  filename?: string;
+  caption?: string;
+}) {
   const [url, setUrl] = useState("");
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Den offentlige forsiden = origin (roten av nettstedet)
-    setUrl(window.location.origin);
-  }, []);
+    setUrl(window.location.origin + path);
+  }, [path]);
 
   function downloadPng() {
     const canvas = wrapperRef.current?.querySelector("canvas");
     if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "egg-qr.png";
+    link.download = filename;
     link.href = canvas.toDataURL("image/png");
     link.click();
   }
@@ -33,7 +40,7 @@ export default function QrCode() {
       >
         <QRCodeCanvas
           value={url}
-          size={220}
+          size={200}
           marginSize={2}
           level="M"
           fgColor="#292524"
@@ -47,9 +54,7 @@ export default function QrCode() {
       >
         ⬇ Last ned QR-kode (PNG)
       </button>
-      <p className="mt-2 text-center text-xs text-stone-400">
-        Skriv ut og heng på postkassen.
-      </p>
+      <p className="mt-2 text-center text-xs text-stone-400">{caption}</p>
     </div>
   );
 }
