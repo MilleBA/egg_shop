@@ -36,25 +36,29 @@ export default function QrCode({
     <div className="flex flex-col items-center">
       <div
         ref={wrapperRef}
-        className="rounded-2xl border border-stone-200 bg-white p-4"
+        className="rounded-md border-[1.5px] border-red bg-white p-4"
       >
         <QRCodeCanvas
           value={url}
           size={200}
           marginSize={2}
           level="M"
-          fgColor="#292524"
+          fgColor="#8e2323"
         />
       </div>
-      <p className="mt-3 break-all text-center text-xs text-stone-400">{url}</p>
+      <p className="mt-3 break-all text-center font-mono text-[12px] text-unit">
+        {url}
+      </p>
       <button
         type="button"
         onClick={downloadPng}
-        className="mt-4 rounded-2xl bg-stone-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-700"
+        className="mt-4 rounded-[7px] bg-barn px-5 py-3 font-display text-[15px] text-card shadow-[inset_0_1px_0_rgba(255,255,255,.18)] transition hover:bg-barn-hover active:scale-[.98]"
       >
         ⬇ Last ned QR-kode (PNG)
       </button>
-      <p className="mt-2 text-center text-xs text-stone-400">{caption}</p>
+      <p className="mt-2 text-center font-body text-[13px] italic text-muted">
+        {caption}
+      </p>
     </div>
   );
 }

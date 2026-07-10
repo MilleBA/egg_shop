@@ -1,9 +1,14 @@
-# 🌾 Gårdsbutikk
+# 🌾 Amundsen Homestead
 
 En liten, moderne nettside for å selge varer fra gården – egg i dag, kaniner
 neste år, og hva du enn vil senere. Du oppretter **annonser** selv fra admin
 (bilde, kort tekst, lager og reservering), og hver annonse får sin egen side og
 QR-kode.
+
+Designet er «Rosemåling» – norsk folkekunst / Telemark-bunad: pergament-bakgrunn,
+dyp Telemark-rød ramme med gull- og grønn-aksent, doble flate rammer og
+diamant-prikk-motiv (Marcellus SC + Spectral). Forsiden er **adaptiv**: 1 annonse
+vises som en stor hero-side, 2+ som en kortliste.
 
 Bygget med **Next.js (App Router)**, **Tailwind CSS** og **Supabase**
 (database + innlogging + bildelagring). Klar for **Vercel**.
@@ -130,12 +135,18 @@ src/
         page.tsx                   # Editor (server; id="ny" = opprett)
         ListingEditor.tsx          # Editor-skjema (klient)
   components/
-    ReservationForm.tsx            # Dynamisk reservasjonsskjema
+    TopBar.tsx                     # Persistent merkevare-topbar + rosemaling-bord
+    Divider.tsx                    # Diamant+prikk folkekunst-skille
+    ListingView.tsx                # Felles hero/detalje-visning
+    ProductImage.tsx               # Bilde med 3D-look / burlap-placeholder
+    StatusPill.tsx                 # "X igjen" / "Kun N igjen" / "Utsolgt"
+    ReservationForm.tsx            # Dynamisk reservasjonsskjema (+ bekreftelse)
     QrCode.tsx                     # QR-generering + nedlasting
     RealtimeRefresh.tsx            # Live oppdatering via Supabase Realtime
   lib/
     types.ts
     slug.ts
+    stock.ts                       # Statuspille-logikk + prisetikett
     supabase/{client,server,middleware}.ts
   middleware.ts                    # Sesjon + beskyttelse av /admin
 supabase/

@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Divider from "@/components/Divider";
+
+const inputClass =
+  "mt-1 w-full rounded-md border-[1.5px] border-red bg-card px-4 py-3 font-body text-ink outline-none focus:border-barn focus:ring-2 focus:ring-[#c8912e55]";
+const labelClass =
+  "block font-sans text-[12px] font-semibold uppercase tracking-[.06em] text-muted";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,20 +39,20 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
+    <main className="flex min-h-[70vh] items-center justify-center px-6 py-10">
       <form
         onSubmit={handleLogin}
-        className="w-full max-w-sm rounded-3xl border border-stone-200 bg-white p-8 shadow-sm"
+        className="folk-card animate-scrin w-full max-w-sm p-8"
       >
-        <div className="mb-6 text-center">
-          <span className="text-4xl">🔒</span>
-          <h1 className="mt-3 text-2xl font-bold text-stone-800">Admin</h1>
-          <p className="mt-1 text-sm text-stone-500">
-            Logg inn for å styre eggsalget.
+        <div className="mb-5 text-center">
+          <h1 className="font-display text-[28px] text-ink">Admin</h1>
+          <Divider rules={false} className="mt-3" />
+          <p className="mt-3 font-body text-[14px] italic text-muted">
+            Logg inn for å styre gårdsbutikken.
           </p>
         </div>
 
-        <label htmlFor="email" className="text-sm font-medium text-stone-700">
+        <label htmlFor="email" className={labelClass}>
           E-post
         </label>
         <input
@@ -55,10 +61,10 @@ export default function LoginPage() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 mb-4 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          className={`${inputClass} mb-4`}
         />
 
-        <label htmlFor="password" className="text-sm font-medium text-stone-700">
+        <label htmlFor="password" className={labelClass}>
           Passord
         </label>
         <input
@@ -67,11 +73,11 @@ export default function LoginPage() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          className={inputClass}
         />
 
         {error && (
-          <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="mt-4 rounded-md border border-[#8f4032] bg-[#edd8cc] px-4 py-3 font-sans text-sm text-[#8f4032]">
             {error}
           </p>
         )}
@@ -79,7 +85,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded-2xl bg-amber-500 px-6 py-3 font-semibold text-white transition hover:bg-amber-600 disabled:opacity-60"
+          className="mt-6 w-full rounded-[7px] bg-barn px-6 py-3.5 font-display text-[17px] text-card shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_10px_20px_-12px_rgba(140,40,25,.8)] transition hover:bg-barn-hover active:scale-[.98] disabled:opacity-70"
         >
           {loading ? "Logger inn …" : "Logg inn"}
         </button>

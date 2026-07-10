@@ -13,6 +13,11 @@ import {
 } from "@/lib/types";
 import QrCode from "@/components/QrCode";
 
+const inputClass =
+  "mt-1 w-full rounded-md border-[1.5px] border-red bg-card px-4 py-3 font-body text-ink outline-none focus:border-barn focus:ring-2 focus:ring-[#c8912e55]";
+const labelClass =
+  "block font-sans text-[12px] font-semibold uppercase tracking-[.06em] text-muted";
+
 export default function ListingEditor({ listing }: { listing: Listing | null }) {
   const router = useRouter();
   const supabase = createClient();
@@ -93,8 +98,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
       return;
     }
 
-    const quantityOptions =
-      reservationType === "fixed" ? parseOptions() : [];
+    const quantityOptions = reservationType === "fixed" ? parseOptions() : [];
     if (reservationType === "fixed" && quantityOptions.length === 0) {
       setMessage("Skriv minst ett antall-valg, f.eks. «6, 12, 24».");
       return;
@@ -143,24 +147,20 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-10">
+    <main className="animate-scrin mx-auto max-w-2xl px-6 py-8">
       <Link
         href="/admin"
-        className="text-sm font-medium text-stone-500 hover:text-stone-800"
+        className="inline-block rounded-md border-[1.5px] border-red bg-card px-4 py-2 font-sans text-[13px] font-semibold text-red transition hover:bg-red hover:text-card"
       >
         ← Tilbake til admin
       </Link>
 
-      <h1 className="mt-4 text-2xl font-bold text-stone-800">
+      <h1 className="mt-5 font-display text-[28px] text-ink">
         {isNew ? "Ny annonse" : "Rediger annonse"}
       </h1>
 
-      <form
-        onSubmit={handleSave}
-        className="mt-6 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        {/* Tittel */}
-        <label htmlFor="title" className="text-sm font-medium text-stone-700">
+      <form onSubmit={handleSave} className="folk-card mt-6 p-6 sm:p-8">
+        <label htmlFor="title" className={labelClass}>
           Tittel
         </label>
         <input
@@ -169,19 +169,15 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
           required
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          className={inputClass}
           placeholder="F.eks. «Kaninunger til salgs»"
         />
 
-        {/* Slug */}
-        <label
-          htmlFor="slug"
-          className="mt-4 block text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="slug" className={`${labelClass} mt-4`}>
           URL (slug)
         </label>
         <div className="mt-1 flex items-center gap-2">
-          <span className="text-sm text-stone-400">/a/</span>
+          <span className="font-body text-[14px] text-unit">/a/</span>
           <input
             id="slug"
             type="text"
@@ -190,16 +186,12 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
               setSlug(slugify(e.target.value));
               setSlugEdited(true);
             }}
-            className="w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+            className="w-full rounded-md border-[1.5px] border-red bg-card px-4 py-3 font-body text-ink outline-none focus:border-barn focus:ring-2 focus:ring-[#c8912e55]"
             placeholder="kaninunger"
           />
         </div>
 
-        {/* Beskrivelse */}
-        <label
-          htmlFor="description"
-          className="mt-4 block text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="description" className={`${labelClass} mt-4`}>
           Kort tekst
         </label>
         <textarea
@@ -207,31 +199,24 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="mt-1 w-full resize-none rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          className={`${inputClass} resize-none`}
           placeholder="Beskriv varen kort …"
         />
 
-        {/* Kategori */}
-        <label
-          htmlFor="category"
-          className="mt-4 block text-sm font-medium text-stone-700"
-        >
-          Kategori <span className="text-stone-400">(valgfritt)</span>
+        <label htmlFor="category" className={`${labelClass} mt-4`}>
+          Kategori / enhet{" "}
+          <span className="normal-case text-unit">(valgfritt)</span>
         </label>
         <input
           id="category"
           type="text"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-          placeholder="egg, kanin …"
+          className={inputClass}
+          placeholder="f.eks. «12-kartong», «pr. stk»"
         />
 
-        {/* Reservasjonstype */}
-        <label
-          htmlFor="rtype"
-          className="mt-4 block text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="rtype" className={`${labelClass} mt-4`}>
           Reservasjonstype
         </label>
         <select
@@ -240,7 +225,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
           onChange={(e) =>
             setReservationType(e.target.value as ReservationType)
           }
-          className="mt-1 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          className={inputClass}
         >
           {(Object.keys(RESERVATION_TYPE_LABELS) as ReservationType[]).map(
             (t) => (
@@ -253,10 +238,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
 
         {reservationType === "fixed" && (
           <>
-            <label
-              htmlFor="options"
-              className="mt-4 block text-sm font-medium text-stone-700"
-            >
+            <label htmlFor="options" className={`${labelClass} mt-4`}>
               Antall-valg (kommaseparert)
             </label>
             <input
@@ -264,17 +246,13 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
               type="text"
               value={optionsText}
               onChange={(e) => setOptionsText(e.target.value)}
-              className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+              className={inputClass}
               placeholder="6, 12, 24"
             />
           </>
         )}
 
-        {/* Lager */}
-        <label
-          htmlFor="count"
-          className="mt-4 block text-sm font-medium text-stone-700"
-        >
+        <label htmlFor="count" className={`${labelClass} mt-4`}>
           Antall tilgjengelig (lager)
         </label>
         <input
@@ -283,16 +261,11 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
           min={0}
           value={availableCount}
           onChange={(e) => setAvailableCount(Number(e.target.value))}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 text-lg outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          className={inputClass}
         />
 
-        {/* Pris (forberedt for betaling) */}
-        <label
-          htmlFor="price"
-          className="mt-4 block text-sm font-medium text-stone-700"
-        >
-          Pris i kr{" "}
-          <span className="text-stone-400">(valgfritt – for senere)</span>
+        <label htmlFor="price" className={`${labelClass} mt-4`}>
+          Pris i kr <span className="normal-case text-unit">(valgfritt)</span>
         </label>
         <input
           id="price"
@@ -301,17 +274,13 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
           step="0.01"
           value={priceText}
           onChange={(e) => setPriceText(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-          placeholder="F.eks. 50"
+          className={inputClass}
+          placeholder="F.eks. 65"
         />
 
-        {/* Rekkefølge + publisert */}
         <div className="mt-4 grid grid-cols-2 gap-4">
           <div>
-            <label
-              htmlFor="sort"
-              className="block text-sm font-medium text-stone-700"
-            >
+            <label htmlFor="sort" className={labelClass}>
               Rekkefølge
             </label>
             <input
@@ -319,7 +288,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
               type="number"
               value={sortOrder}
               onChange={(e) => setSortOrder(Number(e.target.value))}
-              className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+              className={inputClass}
             />
           </div>
           <div className="flex items-end">
@@ -328,10 +297,10 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
                 type="checkbox"
                 checked={isPublished}
                 onChange={(e) => setIsPublished(e.target.checked)}
-                className="h-5 w-5 rounded border-stone-300 text-amber-500 focus:ring-amber-400"
+                className="h-5 w-5 rounded border-red text-barn focus:ring-barn"
               />
-              <span className="text-sm font-medium text-stone-700">
-                Publisert (synlig på forsiden)
+              <span className="font-sans text-[13px] font-semibold text-body">
+                Publisert (synlig)
               </span>
             </label>
           </div>
@@ -339,10 +308,10 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
 
         {/* Bilde */}
         <div className="mt-4">
-          <span className="text-sm font-medium text-stone-700">Bilde</span>
+          <span className={labelClass}>Bilde</span>
           <div className="mt-2 flex items-center gap-4">
             {imageUrl && (
-              <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-stone-200">
+              <div className="relative h-20 w-20 overflow-hidden rounded-[4px] shadow-[inset_0_0_0_2px_#8e2323]">
                 <Image
                   src={imageUrl}
                   alt="Forhåndsvisning"
@@ -352,7 +321,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
                 />
               </div>
             )}
-            <label className="cursor-pointer rounded-2xl border border-stone-200 px-4 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-50">
+            <label className="cursor-pointer rounded-md border-[1.5px] border-red bg-card px-4 py-2.5 font-sans text-[13px] font-semibold text-red transition hover:bg-red hover:text-card">
               {uploading
                 ? "Laster opp …"
                 : imageUrl
@@ -370,7 +339,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
               <button
                 type="button"
                 onClick={() => setImageUrl(null)}
-                className="text-sm text-red-600 hover:underline"
+                className="font-sans text-[13px] font-semibold text-barn hover:underline"
               >
                 Fjern
               </button>
@@ -379,7 +348,7 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
         </div>
 
         {message && (
-          <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-stone-700">
+          <p className="mt-5 rounded-md border border-gold bg-[#f2e3b6] px-4 py-3 font-body text-sm text-ink">
             {message}
           </p>
         )}
@@ -387,19 +356,23 @@ export default function ListingEditor({ listing }: { listing: Listing | null }) 
         <button
           type="submit"
           disabled={saving || uploading}
-          className="mt-6 w-full rounded-2xl bg-amber-500 px-6 py-3 font-semibold text-white transition hover:bg-amber-600 disabled:opacity-60"
+          className="mt-6 w-full rounded-[7px] bg-barn px-6 py-4 font-display text-[17px] text-card shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_10px_20px_-12px_rgba(140,40,25,.8)] transition hover:bg-barn-hover active:scale-[.98] disabled:opacity-70"
         >
-          {saving ? "Lagrer …" : isNew ? "Opprett annonse" : "Lagre endringer"}
+          {saving
+            ? "Lagrer …"
+            : isNew
+              ? "Opprett annonse"
+              : "Lagre endringer"}
         </button>
       </form>
 
-      {/* QR per annonse (kun når annonsen finnes) */}
+      {/* QR per annonse */}
       {!isNew && (
-        <section className="mt-8 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-lg font-bold text-stone-800">
+        <section className="folk-card mt-8 p-6 sm:p-8">
+          <h2 className="font-display text-[22px] text-ink">
             QR-kode til denne annonsen
           </h2>
-          <p className="mt-1 mb-6 text-sm text-stone-500">
+          <p className="mb-6 mt-1 font-body text-[14px] italic text-muted">
             Peker rett til «{listing.title}».
           </p>
           <QrCode

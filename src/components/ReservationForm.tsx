@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { priceLabel } from "@/lib/stock";
 import type { ReservationType } from "@/lib/types";
+import Divider from "@/components/Divider";
 
 const ERROR_TEXT: Record<string, string> = {
   not_enough: "Beklager, det er ikke nok igjen til dette antallet.",
@@ -13,16 +15,28 @@ const ERROR_TEXT: Record<string, string> = {
   network: "Noe gikk galt. Prøv igjen om litt.",
 };
 
+const inputClass =
+  "mt-1 w-full rounded-md border-[1.5px] border-red bg-card px-4 py-3 font-body text-ink outline-none focus:border-barn focus:ring-2 focus:ring-[#c8912e55]";
+
+const labelClass = "block font-sans text-[12px] font-semibold uppercase tracking-[.06em] text-muted";
+
+const stepBtn =
+  "flex h-10 w-10 items-center justify-center rounded-md border-[1.5px] border-red bg-card text-[22px] leading-none text-red transition active:bg-[#e7dcc2]";
+
 export default function ReservationForm({
   listingId,
+  title,
   reservationType,
   quantityOptions,
   availableCount,
+  price,
 }: {
   listingId: string;
+  title: string;
   reservationType: ReservationType;
   quantityOptions: number[];
   availableCount: number;
+  price: number | null;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -30,12 +44,25 @@ export default function ReservationForm({
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [doneInfo, setDoneInfo] = useState<{ qty: number; total: string | null }>(
+    { qty: 0, total: null }
+  );
 
-  // Startverdi for antall avhengig av type
   const fixedOptions = quantityOptions.filter((q) => q <= availableCount);
   const [quantity, setQuantity] = useState<number>(
-    reservationType === "single" ? 1 : reservationType === "free" ? 1 : 0
+    reservationType === "single" || reservationType === "free" ? 1 : 0
   );
+
+  const effectiveQty = reservationType === "single" ? 1 : quantity;
+  const totalLabel = price != null ? `${price * effectiveQty} kr` : null;
+  const showPriceRow = price != null || reservationType === "free";
+
+  function inc() {
+    setQuantity((q) => Math.min(availableCount, q + 1));
+  }
+  function dec() {
+    setQuantity((q) => Math.max(1, q - 1));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +72,10 @@ export default function ReservationForm({
       setError("Velg hvor mange du vil reservere.");
       return;
     }
-    if (reservationType === "free" && (quantity < 1 || quantity > availableCount)) {
+    if (
+      reservationType === "free" &&
+      (quantity < 1 || quantity > availableCount)
+    ) {
       setError(`Velg et antall mellom 1 og ${availableCount}.`);
       return;
     }
@@ -57,7 +87,7 @@ export default function ReservationForm({
       p_listing_id: listingId,
       p_name: name.trim(),
       p_phone: phone.trim(),
-      p_quantity: reservationType === "single" ? 1 : quantity,
+      p_quantity: effectiveQty,
       p_note: note.trim() || null,
     });
 
@@ -75,138 +105,149 @@ export default function ReservationForm({
       return;
     }
 
+    setDoneInfo({ qty: effectiveQty, total: totalLabel });
     setStatus("done");
-    router.refresh();
   }
 
+  // ---- Bekreftelse ----
   if (status === "done") {
     return (
-      <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-8 text-center">
-        <p className="text-4xl">✅</p>
-        <h2 className="mt-3 text-2xl font-bold text-emerald-800">
-          Reservasjonen er mottatt!
+      <div className="animate-scrin flex flex-col items-center px-2 py-8 text-center">
+        <div className="animate-popin flex h-[84px] w-[84px] items-center justify-center rounded-full bg-red text-[38px] text-goldtext shadow-[0_0_0_4px_#f2e7ce,0_0_0_6px_#c8912e,0_0_0_8px_#3e5d42]">
+          ✓
+        </div>
+        <h2 className="mb-2 mt-6 font-display text-[32px] text-ink">
+          Reservert!
         </h2>
-        <p className="mt-2 text-emerald-700">
-          Takk, {name.split(" ")[0] || "og velkommen"}. Vi legger det klar til
-          deg.
+        <Divider rules={false} className="mb-4" />
+        <p className="mb-6 max-w-[250px] font-body text-[14px] text-muted">
+          Vi legger det klart. Hent på gården innen 2 dager 💛
         </p>
+        <div className="folk-card flex w-full items-center justify-between px-5 py-4">
+          <div className="text-left">
+            <div className="font-display text-[19px] text-ink">{title}</div>
+            <div className="font-body text-[13px] italic text-unit">
+              Antall: {doneInfo.qty}
+            </div>
+          </div>
+          {doneInfo.total && (
+            <div className="font-display text-[19px] text-barn">
+              {doneInfo.total}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => {
+            router.push("/");
+            router.refresh();
+          }}
+          className="mt-6 w-full rounded-[7px] border-[1.5px] border-red bg-transparent px-6 py-3.5 font-display text-[16px] text-red transition hover:bg-red hover:text-card"
+        >
+          Tilbake til butikken
+        </button>
       </div>
     );
   }
 
+  // ---- Reservasjonspanel ----
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8"
-    >
-      <h2 className="text-xl font-bold text-stone-800">Reserver</h2>
-      <p className="mt-1 text-sm text-stone-500">
-        Fyll inn skjemaet, så holder vi av til deg.
-      </p>
+    <form onSubmit={handleSubmit}>
+      {showPriceRow && (
+        <div className="mb-4 flex items-center justify-between border-y border-[rgba(200,145,46,.6)] py-4">
+          {price != null ? (
+            <span className="font-display text-[28px] text-barn">
+              {priceLabel(price)}
+            </span>
+          ) : (
+            <span className="font-body text-[15px] italic text-muted">
+              Velg antall
+            </span>
+          )}
 
-      {/* Antall */}
+          {reservationType === "free" && (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={dec} className={stepBtn} aria-label="Færre">
+                −
+              </button>
+              <span className="min-w-[32px] text-center font-display text-[22px] text-ink">
+                {quantity}
+              </span>
+              <button type="button" onClick={inc} className={stepBtn} aria-label="Flere">
+                +
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Faste valg */}
       {reservationType === "fixed" && (
-        <fieldset className="mt-6">
-          <legend className="text-sm font-medium text-stone-700">
-            Hvor mange?
-          </legend>
-          <div className="mt-2 grid grid-cols-3 gap-3">
-            {fixedOptions.map((q) => (
+        <div className="mb-4 grid grid-cols-3 gap-2.5">
+          {fixedOptions.map((q) => {
+            const selected = quantity === q;
+            return (
               <button
                 type="button"
                 key={q}
                 onClick={() => setQuantity(q)}
-                className={`rounded-2xl border px-4 py-4 text-center transition ${
-                  quantity === q
-                    ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500"
-                    : "border-stone-200 hover:border-amber-300"
+                className={`rounded-md border-[1.5px] border-red py-3 text-center font-display text-[20px] transition active:scale-[.98] ${
+                  selected ? "bg-red text-card" : "bg-card text-ink"
                 }`}
               >
-                <span className="block text-2xl font-bold text-stone-800">
-                  {q}
-                </span>
-                <span className="text-xs text-stone-400">stk</span>
+                {q}
               </button>
-            ))}
-          </div>
-        </fieldset>
-      )}
-
-      {reservationType === "free" && (
-        <div className="mt-6">
-          <label
-            htmlFor="quantity"
-            className="text-sm font-medium text-stone-700"
-          >
-            Hvor mange? (maks {availableCount})
-          </label>
-          <input
-            id="quantity"
-            type="number"
-            min={1}
-            max={availableCount}
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
-            className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 text-lg outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-          />
+            );
+          })}
         </div>
       )}
 
       {reservationType === "single" && (
-        <p className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-stone-600">
-          Du reserverer <strong>1 stk</strong>.
+        <p className="mb-4 rounded-md border-[1.5px] border-red bg-card px-4 py-2.5 font-body text-[14px] text-body">
+          Du reserverer <strong className="text-ink">1 stk</strong>.
         </p>
       )}
 
-      {/* Navn */}
-      <div className="mt-5">
-        <label htmlFor="name" className="text-sm font-medium text-stone-700">
-          Navn
-        </label>
-        <input
-          id="name"
-          type="text"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-          placeholder="Ola Nordmann"
-        />
-      </div>
+      {/* Kontaktfelt */}
+      <label htmlFor="name" className={labelClass}>
+        Navn
+      </label>
+      <input
+        id="name"
+        type="text"
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className={inputClass}
+        placeholder="Ola Nordmann"
+      />
 
-      {/* Telefon */}
-      <div className="mt-4">
-        <label htmlFor="phone" className="text-sm font-medium text-stone-700">
-          Telefon
-        </label>
-        <input
-          id="phone"
-          type="tel"
-          required
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-          placeholder="123 45 678"
-        />
-      </div>
+      <label htmlFor="phone" className={`${labelClass} mt-3`}>
+        Telefon
+      </label>
+      <input
+        id="phone"
+        type="tel"
+        required
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        className={inputClass}
+        placeholder="123 45 678"
+      />
 
-      {/* Melding */}
-      <div className="mt-4">
-        <label htmlFor="note" className="text-sm font-medium text-stone-700">
-          Melding <span className="text-stone-400">(valgfritt)</span>
-        </label>
-        <textarea
-          id="note"
-          rows={2}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="mt-1 w-full resize-none rounded-2xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-          placeholder="F.eks. «Henter ca. kl. 18»"
-        />
-      </div>
+      <label htmlFor="note" className={`${labelClass} mt-3`}>
+        Melding <span className="normal-case text-unit">(valgfritt)</span>
+      </label>
+      <textarea
+        id="note"
+        rows={2}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        className={`${inputClass} resize-none`}
+        placeholder="F.eks. «Henter ca. kl. 18»"
+      />
 
       {error && (
-        <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mt-3 rounded-md border border-[#8f4032] bg-[#edd8cc] px-4 py-3 font-sans text-sm text-[#8f4032]">
           {error}
         </p>
       )}
@@ -214,9 +255,13 @@ export default function ReservationForm({
       <button
         type="submit"
         disabled={status === "sending"}
-        className="mt-6 w-full rounded-2xl bg-amber-500 px-6 py-4 text-lg font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 w-full rounded-[7px] bg-barn px-6 py-4 font-display text-[18px] tracking-[.02em] text-card shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_10px_20px_-12px_rgba(140,40,25,.8)] transition hover:bg-barn-hover active:scale-[.98] disabled:opacity-70"
       >
-        {status === "sending" ? "Sender …" : "Reserver"}
+        {status === "sending"
+          ? "Sender …"
+          : totalLabel
+            ? `Reserver · ${totalLabel}`
+            : "Reserver"}
       </button>
     </form>
   );
