@@ -28,6 +28,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# local context (Claude)
+context.md
+
 # vercel
 .vercel
 
